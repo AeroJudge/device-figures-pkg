@@ -1,5 +1,11 @@
+# Publish the season's figure SVGs and audio as figures.zip on a GitHub release.
+# This packages assets only; it does not build the app or update judge devices.
 name: Create Release
 
+# Runs when a tag starting with v is pushed, not on ordinary branch pushes.
+# Release naming: vYYYY.RELEASE (for example, v2026.2 = 2026 season, release 2).
+# The trigger below accepts any v-prefixed tag; it does not validate that format.
+# Create a new tag for each release; preserve previously published tags/assets.
 on:
   push:
     tags:
@@ -16,10 +22,12 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Create zip file
+        # Keep figures/ at the archive root for extraction into the install directory.
         run: |
           zip -r figures.zip figures/
       
       - name: Create Release
+        # Publish under the pushed tag, attach the ZIP, and generate release notes.
         uses: softprops/action-gh-release@v1
         with:
           files: figures.zip
