@@ -1,35 +1,51 @@
-# Publish the season's figure SVGs and audio as figures.zip on a GitHub release.
+# Publish the season's figure SVGs and audio as a package on a GitHub release.
 # This packages assets only; it does not build the app or update judge devices.
 name: Create Release
 
-# Runs when a tag starting with v is pushed, not on ordinary branch pushes.
-# Release naming: vYYYY.RELEASE (for example, v2026.2 = 2026 season, release 2).
-# The trigger below accepts any v-prefixed tag; it does not validate that format.
-# Create a new tag for each release; preserve previously published tags/assets.
+# Push a new vYYYY.RELEASE tag after merging the release changes.
+# For example, v2026.3 must match version "2026.3" in package.json.
+# Create a new tag for each release; preserve published tags/assets.
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v20*']
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Create zip file
-        # Keep figures/ at the archive root for extraction into the install directory.
+
+      - name: Check version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          zip -r figures.zip figures/
-      
-      - name: Create Release
-        # Publish under the pushed tag, attach the ZIP, and generate release notes.
-        uses: softprops/action-gh-release@v1
-        with:
-          files: figures.zip
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          set -euo pipefail
+          version=$(jq -er '.version | select(type == "string" and test("^20[0-9]{2}[.](0|[1-9][0-9]*)$"))' package.json)
+          test "$RELEASE_TAG" = "v$version"
+
+      - name: Create package
+        # Keep figures/ at the archive root for extraction into /var/opt/judge.
+        # package.json travels inside it so the device can identify the installed package.
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp -r figures dist/figures
+          cp package.json dist/figures/
+          cp package.json dist/
+          cd dist
+          zip -qr figures.zip figures/
+          sha256sum figures.zip package.json > SHA256SUMS
+
+      - name: Publish release
+        # Create a new release; fail rather than replace an existing release's assets.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" --verify-tag \
+            --title "$RELEASE_TAG" --generate-notes \
+            dist/figures.zip dist/package.json dist/SHA256SUMS
