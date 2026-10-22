@@ -27,7 +27,7 @@ jobs:
           test "$RELEASE_TAG" = "v$version"
 
       - name: Create package
-        # Keep figures/ at the archive root for extraction into /var/opt/judge.
+        # Keep figures/ at the archive root for extraction into the install directory.
         # package.json travels inside it so the device can identify the installed package.
         run: |
           set -euo pipefail
@@ -40,7 +40,8 @@ jobs:
           sha256sum figures.zip package.json > SHA256SUMS
 
       - name: Publish release
-        # Create a new release; fail rather than replace an existing release's assets.
+        # Publish under the pushed tag, attach the assets, and generate release notes.
+        # Fails rather than replacing an existing release's assets.
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
