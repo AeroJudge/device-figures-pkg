@@ -10,10 +10,10 @@ publishes `figures.zip`, `package.json` and `SHA256SUMS`. Use `vYYYY.RELEASE`,
 for example `v2026.3` for the third release of the 2026 season. Preserve released
 tags and assets.
 
-The season comes from the package version: `2027.1` means season 2027.
-Do not duplicate it in a separate `season` field or `season.cfg`. In a future
-season-handling change, derive the app's season setting from the installed
-package version and convert it to the required format (for example, `27`).
+The season comes from the package version: `2027.0` means season 2027.
+Do not duplicate it in a separate `season` field or `season.cfg`. The app
+derives its two-digit season (for example, `27`) from the installed package
+version.
 
 ## Package repository expectations
 

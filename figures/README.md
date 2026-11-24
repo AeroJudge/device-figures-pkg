@@ -12,7 +12,7 @@ figures/
     common-audio/
         en/
             085.mp3
-            instructions.mp3
+            instructions-global.mp3
             roundcompleted.mp3
             ...
     default/
